@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Activity Register</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Identity Services for Sign In -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Chart.js for Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <h1>Daily Activity Register</h1>
+      <div class="brand">আপনার প্রতিষ্ঠান</div>
+    </div>
+
+    <details class="config" open>
+      <summary>⚙️ কনফিগারেশন (API URL, TOKEN, Google Client ID)</summary>
+      <div class="cfg-grid">
+        <label>Apps Script API URL
+          <input id="apiUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" />
+        </label>
+        <label>API TOKEN
+          <input id="apiToken" type="text" placeholder="WEB_APP_TOKEN" />
+        </label>
+        <label>Google Client ID
+          <input id="googleClientId" type="text" placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com" />
+        </label>
+        <button id="saveCfg" class="btn">Save Config</button>
+      </div>
+      <small>কনফিগারেশন শুধুমাত্র এই ব্রাউজারের LocalStorage-এ সেভ হবে।</small>
+    </details>
+
+    <div class="auth">
+      <div id="g_id_signin"></div>
+      <div id="userBox" class="hide">
+        <img id="userPic" alt="" />
+        <div>
+          <div id="userName"></div>
+          <div id="userEmail" class="muted"></div>
+        </div>
+        <button id="signOut" class="btn btn-light">Sign out</button>
+      </div>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="entryTab">✍️ এন্ট্রি</button>
+      <button class="tab" data-tab="listTab">📋 তালিকা</button>
+      <button class="tab" data-tab="dashTab">📊 ড্যাশবোর্ড</button>
+      <button class="tab" data-tab="printTab">🖨️ প্রিন্ট</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Entry Tab -->
+    <section id="entryTab" class="tabpanel show">
+      <div class="row">
+        <label>তারিখ (Date)
+          <input type="date" id="date" />
+        </label>
+        <label>সময় (Time)
+          <select id="time"></select>
+        </label>
+      </div>
+
+      <label>Activity
+        <textarea id="activity" rows="2" placeholder="আজ আপনি কী কাজ করছেন/করেছেন?"></textarea>
+      </label>
+
+      <div class="row">
+        <label>Output
+          <input id="output" type="text" placeholder="Done / Not Done / পরিমাণ ইত্যাদি" />
+        </label>
+        <label>Delivery
+          <input id="delivery" type="text" placeholder="ডেলিভারি/হস্তান্তর/কাকে দেওয়া হয়েছে" />
+        </label>
+      </div>
+
+      <label>Follow-up
+        <textarea id="followup" rows="2" placeholder="পরবর্তী পদক্ষেপ/ফলোআপ"></textarea>
+      </label>
+
+      <label>মন্তব্য (Comment)
+        <textarea id="comment" rows="2"></textarea>
+      </label>
+
+      <label>Note
+        <textarea id="notes" rows="2"></textarea>
+      </label>
+
+      <input type="hidden" id="recordId" />
+      <div class="actions">
+        <button id="saveBtn" class="btn">Save</button>
+        <button id="resetBtn" type="button" class="btn btn-light">Reset</button>
+      </div>
+    </section>
+
+    <!-- List Tab -->
+    <section id="listTab" class="tabpanel">
+      <div class="row">
+        <label>তারিখ বাছাই (Filter by Date)
+          <input type="date" id="filterDate" />
+        </label>
+        <label class="chk"><input type="checkbox" id="mineOnly" checked /> শুধু আমার এন্ট্রি</label>
+        <button id="refreshBtn" class="btn">Refresh</button>
+        <div class="spacer"></div>
+        <button id="exportCsv" class="btn btn-light">Export CSV</button>
+        <button id="exportXlsx" class="btn btn-light">Export Excel</button>
+      </div>
+
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Time</th><th>Activity</th><th>Output</th><th>Follow-up</th><th>Comment</th><th>Notes</th><th>Delivery</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Dashboard Tab -->
+    <section id="dashTab" class="tabpanel">
+      <div class="row">
+        <label>শুরু (From)
+          <input type="date" id="fromDate" />
+        </label>
+        <label>শেষ (To)
+          <input type="date" id="toDate" />
+        </label>
+        <label class="chk"><input type="checkbox" id="dashMine" checked /> শুধু আমার</label>
+        <button id="dashLoad" class="btn">Load</button>
+      </div>
+      <div class="row">
+        <div class="card">
+          <h3>সারাংশ</h3>
+          <ul id="summary"></ul>
+        </div>
+      </div>
+      <div class="row charts">
+        <div class="chart-box">
+          <h3>দিনভিত্তিক এন্ট্রি</h3>
+          <canvas id="chartDaily" height="140"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>সপ্তাহভিত্তিক এন্ট্রি</h3>
+          <canvas id="chartWeekly" height="140"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>মাসভিত্তিক এন্ট্রি</h3>
+          <canvas id="chartMonthly" height="140"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Print Tab -->
+    <section id="printTab" class="tabpanel">
+      <div class="row">
+        <label>তারিখ
+          <input type="date" id="printDate" />
+        </label>
+        <label class="chk"><input type="checkbox" id="printMine" checked /> শুধু আমার</label>
+        <button id="prepPrint" class="btn">প্রিভিউ</button>
+        <button id="doPrint" class="btn btn-light">Print</button>
+      </div>
+
+      <div id="printArea" class="print-layout">
+        <div class="print-header">
+          <div>
+            <div class="title">Daily Activity Register</div>
+            <div class="muted">Date: <span id="printDateText"></span></div>
+          </div>
+          <div class="brand">প্রতিষ্ঠান</div>
+        </div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th style="width:120px">Time</th>
+              <th>Task's Description</th>
+              <th style="width:120px">Output</th>
+            </tr>
+          </thead>
+          <tbody id="printRows"></tbody>
+        </table>
+        <div class="split">
+          <div>
+            <div class="section-title">NOTE</div>
+            <div id="printNotes" class="section-box"></div>
+          </div>
+          <div>
+            <div class="section-title">DELIVERY</div>
+            <div id="printDelivery" class="section-box"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>© আপনার প্রতিষ্ঠান</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
