@@ -3,48 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Activity Register</title>
+  <title>Daily Activity Register — Final</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <!-- Google Identity Services for Sign In -->
+  <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- Chart.js for Dashboard -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- SheetJS for Excel export -->
+  <!-- SheetJS (Excel export) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-  <header>
+  <!-- Ambient gradient blobs -->
+  <div class="bg-blob b1"></div>
+  <div class="bg-blob b2"></div>
+  <div class="bg-blob b3"></div>
+
+  <!-- Save Celebration Overlay -->
+  <div id="saveOverlay" class="save-overlay hidden" aria-hidden="true">
+    <div class="save-card">
+      <svg class="check" viewBox="0 0 72 72" width="96" height="96" aria-hidden="true">
+        <circle class="ring" cx="36" cy="36" r="34" fill="none" />
+        <polyline class="tick" points="18,38 30,50 54,24" fill="none" />
+      </svg>
+      <div class="save-text">Saved successfully!</div>
+    </div>
+    <div id="confetti"></div>
+  </div>
+
+  <header class="glass header">
     <div class="topbar">
-      <h1>Daily Activity Register</h1>
+      <div class="title-wrap">
+        <h1>Daily Activity Register</h1>
+        <div class="subtitle">দ্রুত এন্ট্রি • স্মার্ট ফিল্টার • ড্যাশবোর্ড • প্রিন্ট</div>
+      </div>
       <div class="brand">আপনার প্রতিষ্ঠান</div>
     </div>
 
-    <details class="config" open>
+    <details class="config">
       <summary>⚙️ কনফিগারেশন (API URL, TOKEN, Google Client ID)</summary>
       <div class="cfg-grid">
         <label>Apps Script API URL
-          <input id="apiUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" />
+          <input id="apiUrl" type="url" placeholder="https://script.google.com/macros/s/AKfycbzwq-nAWc8XQ0oUnmGWgAzhcPDjdk3N8w27Kc1ZZPUHVB2FlTn7JtgKdcH_fZXfIYvSxA/exec" />
         </label>
         <label>API TOKEN
-          <input id="apiToken" type="text" placeholder="WEB_APP_TOKEN" />
+          <input id="apiToken" type="text" placeholder="Z4rP8kT1sM9yE3bQ6vD2fW7nV0hU5xJ" />
         </label>
         <label>Google Client ID
-          <input id="googleClientId" type="text" placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com" />
+          <input id="googleClientId" type="text" placeholder="246306767204-qufpgjt23rae763lue1p91a9m7v3e29l.apps.googleusercontent.com" />
         </label>
-        <button id="saveCfg" class="btn">Save Config</button>
+        <button id="saveCfg" class="btn btn-primary">Save Config</button>
       </div>
-      <small>কনফিগারেশন শুধুমাত্র এই ব্রাউজারের LocalStorage-এ সেভ হবে।</small>
+      <small class="muted">প্রথম লোডে এগুলো স্বয়ংক্রিয়ভাবে সেট হয়ে যাবে (LocalStorage)। চাইলে পরিবর্তন করতে পারেন।</small>
     </details>
 
     <div class="auth">
       <div id="g_id_signin"></div>
-      <div id="userBox" class="hide">
+      <div id="userBox" class="hide userbox">
         <img id="userPic" alt="" />
         <div>
-          <div id="userName"></div>
-          <div id="userEmail" class="muted"></div>
+          <div id="userName" class="user-name"></div>
+          <div id="userEmail" class="muted tiny"></div>
         </div>
-        <button id="signOut" class="btn btn-light">Sign out</button>
+        <button id="signOut" class="btn btn-ghost">Sign out</button>
       </div>
     </div>
 
@@ -57,8 +80,8 @@
   </header>
 
   <main>
-    <!-- Entry Tab -->
-    <section id="entryTab" class="tabpanel show">
+    <!-- Entry -->
+    <section id="entryTab" class="tabpanel show glass card">
       <div class="row">
         <label>তারিখ (Date)
           <input type="date" id="date" />
@@ -95,36 +118,37 @@
 
       <input type="hidden" id="recordId" />
       <div class="actions">
-        <button id="saveBtn" class="btn">Save</button>
-        <button id="resetBtn" type="button" class="btn btn-light">Reset</button>
+        <button id="saveBtn" class="btn btn-cta ripple">Save</button>
+        <button id="resetBtn" type="button" class="btn btn-ghost">Reset</button>
       </div>
     </section>
 
-    <!-- List Tab -->
-    <section id="listTab" class="tabpanel">
+    <!-- List -->
+    <section id="listTab" class="tabpanel glass card">
       <div class="row">
         <label>তারিখ বাছাই (Filter by Date)
           <input type="date" id="filterDate" />
         </label>
         <label class="chk"><input type="checkbox" id="mineOnly" checked /> শুধু আমার এন্ট্রি</label>
-        <button id="refreshBtn" class="btn">Refresh</button>
+        <button id="refreshBtn" class="btn btn-primary">Refresh</button>
         <div class="spacer"></div>
-        <button id="exportCsv" class="btn btn-light">Export CSV</button>
-        <button id="exportXlsx" class="btn btn-light">Export Excel</button>
+        <button id="exportCsv" class="btn btn-soft">Export CSV</button>
+        <button id="exportXlsx" class="btn btn-soft">Export Excel</button>
       </div>
-
-      <table id="dataTable">
-        <thead>
-          <tr>
-            <th>Time</th><th>Activity</th><th>Output</th><th>Follow-up</th><th>Comment</th><th>Notes</th><th>Delivery</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-wrap">
+        <table id="dataTable" class="table">
+          <thead>
+            <tr>
+              <th>Time</th><th>Activity</th><th>Output</th><th>Follow-up</th><th>Comment</th><th>Notes</th><th>Delivery</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
-    <!-- Dashboard Tab -->
-    <section id="dashTab" class="tabpanel">
+    <!-- Dashboard -->
+    <section id="dashTab" class="tabpanel glass card">
       <div class="row">
         <label>শুরু (From)
           <input type="date" id="fromDate" />
@@ -133,12 +157,12 @@
           <input type="date" id="toDate" />
         </label>
         <label class="chk"><input type="checkbox" id="dashMine" checked /> শুধু আমার</label>
-        <button id="dashLoad" class="btn">Load</button>
+        <button id="dashLoad" class="btn btn-primary">Load</button>
       </div>
       <div class="row">
-        <div class="card">
-          <h3>সারাংশ</h3>
-          <ul id="summary"></ul>
+        <div class="stat">
+          <div class="stat-title">সারাংশ</div>
+          <ul id="summary" class="summary"></ul>
         </div>
       </div>
       <div class="row charts">
@@ -157,17 +181,16 @@
       </div>
     </section>
 
-    <!-- Print Tab -->
-    <section id="printTab" class="tabpanel">
+    <!-- Print -->
+    <section id="printTab" class="tabpanel glass card">
       <div class="row">
         <label>তারিখ
           <input type="date" id="printDate" />
         </label>
         <label class="chk"><input type="checkbox" id="printMine" checked /> শুধু আমার</label>
-        <button id="prepPrint" class="btn">প্রিভিউ</button>
-        <button id="doPrint" class="btn btn-light">Print</button>
+        <button id="prepPrint" class="btn btn-primary">প্রিভিউ</button>
+        <button id="doPrint" class="btn btn-soft">Print</button>
       </div>
-
       <div id="printArea" class="print-layout">
         <div class="print-header">
           <div>
@@ -200,10 +223,18 @@
     </section>
   </main>
 
-  <footer>
+  <footer class="footer glass">
     <small>© আপনার প্রতিষ্ঠান</small>
   </footer>
 
+  <script>
+    /* First load → set defaults into LocalStorage (your values) */
+    (function(){
+      if(!localStorage.getItem('API_URL')) localStorage.setItem('API_URL','https://script.google.com/macros/s/AKfycbzwq-nAWc8XQ0oUnmGWgAzhcPDjdk3N8w27Kc1ZZPUHVB2FlTn7JtgKdcH_fZXfIYvSxA/exec');
+      if(!localStorage.getItem('API_TOKEN')) localStorage.setItem('API_TOKEN','Z4rP8kT1sM9yE3bQ6vD2fW7nV0hU5xJ');
+      if(!localStorage.getItem('GOOGLE_CLIENT_ID')) localStorage.setItem('GOOGLE_CLIENT_ID','246306767204-qufpgjt23rae763lue1p91a9m7v3e29l.apps.googleusercontent.com');
+    })();
+  </script>
   <script src="app.js"></script>
 </body>
 </html>
