@@ -1,0 +1,48 @@
+{
+  "name": "Activity One — Smart Daily Log",
+  "short_name": "ActivityOne",
+  "description": "Daily activity logging with Google Sign‑In, dashboard, trends & print.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "scope": ".",
+  "icons": [
+    {
+      "src": "icons/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Entry",
+      "short_name": "Add",
+      "description": "Quickly open Add Entry view",
+      "url": "?view=add",
+      "icons": [
+        {
+          "src": "icons/app-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Entries",
+      "short_name": "Entries",
+      "description": "Open list of entries",
+      "url": "?view=list",
+      "icons": [
+        {
+          "src": "icons/app-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

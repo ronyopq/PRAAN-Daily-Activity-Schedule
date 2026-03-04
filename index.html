@@ -1,239 +1,247 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="bn">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Activity Register — Final</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b1220"/>
+  <title>Activity One — Smart Daily Log</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/app-icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
-  <!-- Google Identity Services -->
+  <link rel="stylesheet" href="styles.css"/>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- SheetJS (Excel export) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-  <!-- Ambient gradient blobs -->
-  <div class="bg-blob b1"></div>
-  <div class="bg-blob b2"></div>
-  <div class="bg-blob b3"></div>
-
-  <!-- Save Celebration Overlay -->
-  <div id="saveOverlay" class="save-overlay hidden" aria-hidden="true">
-    <div class="save-card">
-      <svg class="check" viewBox="0 0 72 72" width="96" height="96" aria-hidden="true">
-        <circle class="ring" cx="36" cy="36" r="34" fill="none" />
-        <polyline class="tick" points="18,38 30,50 54,24" fill="none" />
-      </svg>
-      <div class="save-text">Saved successfully!</div>
+  <!-- App bar -->
+  <header class="appbar">
+    <div class="left">
+      <button id="btnMenu" class="icon-btn" aria-label="Menu" title="Menu">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="brand">Activity<span>One</span></div>
     </div>
-    <div id="confetti"></div>
-  </div>
-
-  <header class="glass header">
-    <div class="topbar">
-      <div class="title-wrap">
-        <h1>Daily Activity Register</h1>
-        <div class="subtitle">দ্রুত এন্ট্রি • স্মার্ট ফিল্টার • ড্যাশবোর্ড • প্রিন্ট</div>
+    <div class="right">
+      <button id="btnQuickAdd" class="pill primary hide-md">+ New</button>
+      <div id="userChip" class="user-chip hidden">
+        <img id="userPic" alt=""/>
+        <span id="userName"></span>
       </div>
-      <div class="brand">আপনার প্রতিষ্ঠান</div>
+      <button id="btnSignIn" class="pill">Sign in</button>
+      <button id="btnSignOut" class="pill danger hidden">Sign out</button>
     </div>
-
-    <details class="config">
-      <summary>⚙️ কনফিগারেশন (API URL, TOKEN, Google Client ID)</summary>
-      <div class="cfg-grid">
-        <label>Apps Script API URL
-          <input id="apiUrl" type="url" placeholder="https://script.google.com/macros/s/AKfycbzwq-nAWc8XQ0oUnmGWgAzhcPDjdk3N8w27Kc1ZZPUHVB2FlTn7JtgKdcH_fZXfIYvSxA/exec" />
-        </label>
-        <label>API TOKEN
-          <input id="apiToken" type="text" placeholder="Z4rP8kT1sM9yE3bQ6vD2fW7nV0hU5xJ" />
-        </label>
-        <label>Google Client ID
-          <input id="googleClientId" type="text" placeholder="246306767204-qufpgjt23rae763lue1p91a9m7v3e29l.apps.googleusercontent.com" />
-        </label>
-        <button id="saveCfg" class="btn btn-primary">Save Config</button>
-      </div>
-      <small class="muted">প্রথম লোডে এগুলো স্বয়ংক্রিয়ভাবে সেট হয়ে যাবে (LocalStorage)। চাইলে পরিবর্তন করতে পারেন।</small>
-    </details>
-
-    <div class="auth">
-      <div id="g_id_signin"></div>
-      <div id="userBox" class="hide userbox">
-        <img id="userPic" alt="" />
-        <div>
-          <div id="userName" class="user-name"></div>
-          <div id="userEmail" class="muted tiny"></div>
-        </div>
-        <button id="signOut" class="btn btn-ghost">Sign out</button>
-      </div>
-    </div>
-
-    <nav class="tabs">
-      <button class="tab active" data-tab="entryTab">✍️ এন্ট্রি</button>
-      <button class="tab" data-tab="listTab">📋 তালিকা</button>
-      <button class="tab" data-tab="dashTab">📊 ড্যাশবোর্ড</button>
-      <button class="tab" data-tab="printTab">🖨️ প্রিন্ট</button>
-    </nav>
   </header>
 
-  <main>
-    <!-- Entry -->
-    <section id="entryTab" class="tabpanel show glass card">
-      <div class="row">
-        <label>তারিখ (Date)
-          <input type="date" id="date" />
-        </label>
-        <label>সময় (Time)
-          <select id="time"></select>
-        </label>
+  <!-- Drawer -->
+  <aside id="drawer" class="drawer">
+    <div class="drawer-header">
+      <div class="avatar"><img id="miniPic" alt=""/></div>
+      <div class="meta">
+        <div id="miniName" class="name">Guest</div>
+        <div id="miniEmail" class="muted"></div>
+      </div>
+    </div>
+    <nav class="drawer-nav">
+      <a class="nav active" data-view="home">🏠 Dashboard</a>
+      <a class="nav" data-view="add">✍️ Add Entry</a>
+      <a class="nav" data-view="list">📋 Entries</a>
+      <a class="nav" data-view="print">🖨️ Print</a>
+      <a class="nav" data-view="profile">⚙️ Profile</a>
+    </nav>
+  </aside>
+  <div id="scrim" class="scrim"></div>
+
+  <main id="app" class="app">
+    <!-- ===== HOME ===== -->
+    <section id="view-home" class="view show">
+      <div class="hero">
+        <h1 id="greeting">স্বাগতম!</h1>
+        <p class="muted">আপনার দৈনিক কাজ, সারাংশ ও ট্রেন্ড এখানে দেখুন।</p>
       </div>
 
-      <label>Activity
-        <textarea id="activity" rows="2" placeholder="আজ আপনি কী কাজ করছেন/করেছেন?"></textarea>
-      </label>
-
-      <div class="row">
-        <label>Output
-          <input id="output" type="text" placeholder="Done / Not Done / পরিমাণ ইত্যাদি" />
-        </label>
-        <label>Delivery
-          <input id="delivery" type="text" placeholder="ডেলিভারি/হস্তান্তর/কাকে দেওয়া হয়েছে" />
-        </label>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-title">Today</div><div id="kpiToday" class="kpi-num">0</div></div>
+        <div class="kpi"><div class="kpi-title">This Week</div><div id="kpiWeek" class="kpi-num">0</div></div>
+        <div class="kpi"><div class="kpi-title">This Month</div><div id="kpiMonth" class="kpi-num">0</div></div>
       </div>
 
-      <label>Follow-up
-        <textarea id="followup" rows="2" placeholder="পরবর্তী পদক্ষেপ/ফলোআপ"></textarea>
-      </label>
-
-      <label>মন্তব্য (Comment)
-        <textarea id="comment" rows="2"></textarea>
-      </label>
-
-      <label>Note
-        <textarea id="notes" rows="2"></textarea>
-      </label>
-
-      <input type="hidden" id="recordId" />
-      <div class="actions">
-        <button id="saveBtn" class="btn btn-cta ripple">Save</button>
-        <button id="resetBtn" type="button" class="btn btn-ghost">Reset</button>
-      </div>
-    </section>
-
-    <!-- List -->
-    <section id="listTab" class="tabpanel glass card">
-      <div class="row">
-        <label>তারিখ বাছাই (Filter by Date)
-          <input type="date" id="filterDate" />
-        </label>
-        <label class="chk"><input type="checkbox" id="mineOnly" checked /> শুধু আমার এন্ট্রি</label>
-        <button id="refreshBtn" class="btn btn-primary">Refresh</button>
-        <div class="spacer"></div>
-        <button id="exportCsv" class="btn btn-soft">Export CSV</button>
-        <button id="exportXlsx" class="btn btn-soft">Export Excel</button>
-      </div>
-      <div class="table-wrap">
-        <table id="dataTable" class="table">
-          <thead>
-            <tr>
-              <th>Time</th><th>Activity</th><th>Output</th><th>Follow-up</th><th>Comment</th><th>Notes</th><th>Delivery</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Dashboard -->
-    <section id="dashTab" class="tabpanel glass card">
-      <div class="row">
-        <label>শুরু (From)
-          <input type="date" id="fromDate" />
-        </label>
-        <label>শেষ (To)
-          <input type="date" id="toDate" />
-        </label>
-        <label class="chk"><input type="checkbox" id="dashMine" checked /> শুধু আমার</label>
-        <button id="dashLoad" class="btn btn-primary">Load</button>
-      </div>
-      <div class="row">
-        <div class="stat">
-          <div class="stat-title">সারাংশ</div>
-          <ul id="summary" class="summary"></ul>
-        </div>
-      </div>
-      <div class="row charts">
-        <div class="chart-box">
-          <h3>দিনভিত্তিক এন্ট্রি</h3>
-          <canvas id="chartDaily" height="140"></canvas>
-        </div>
-        <div class="chart-box">
-          <h3>সপ্তাহভিত্তিক এন্ট্রি</h3>
-          <canvas id="chartWeekly" height="140"></canvas>
-        </div>
-        <div class="chart-box">
-          <h3>মাসভিত্তিক এন্ট্রি</h3>
-          <canvas id="chartMonthly" height="140"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- Print -->
-    <section id="printTab" class="tabpanel glass card">
-      <div class="row">
-        <label>তারিখ
-          <input type="date" id="printDate" />
-        </label>
-        <label class="chk"><input type="checkbox" id="printMine" checked /> শুধু আমার</label>
-        <button id="prepPrint" class="btn btn-primary">প্রিভিউ</button>
-        <button id="doPrint" class="btn btn-soft">Print</button>
-      </div>
-      <div id="printArea" class="print-layout">
-        <div class="print-header">
-          <div>
-            <div class="title">Daily Activity Register</div>
-            <div class="muted">Date: <span id="printDateText"></span></div>
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>My Entries — Today</h3>
+            <div class="toolbar">
+              <input id="dashDate" type="date"/>
+              <label class="switch"><input id="dashMine" type="checkbox" checked><span>শুধু আমার</span></label>
+              <button id="btnDashReload" class="pill">Reload</button>
+            </div>
           </div>
-          <div class="brand">প্রতিষ্ঠান</div>
-        </div>
-        <table class="print-table">
-          <thead>
-            <tr>
-              <th style="width:120px">Time</th>
-              <th>Task's Description</th>
-              <th style="width:120px">Output</th>
-            </tr>
-          </thead>
-          <tbody id="printRows"></tbody>
-        </table>
-        <div class="split">
-          <div>
-            <div class="section-title">NOTE</div>
-            <div id="printNotes" class="section-box"></div>
+          <div class="table-wrap">
+            <table class="table" id="tblToday">
+              <thead><tr><th>Time</th><th>Activity</th><th>Output</th></tr></thead>
+              <tbody></tbody>
+            </table>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Notes (Today)</h3></div>
+          <div id="notesBox" class="notes skeleton"></div>
+        </div>
+
+        <div class="card span2">
+          <div class="card-header">
+            <h3>Trends</h3>
+            <div class="toolbar">
+              <input id="fromDate" type="date"/>
+              <input id="toDate" type="date"/>
+              <label class="switch"><input id="trendMine" type="checkbox" checked><span>শুধু আমার</span></label>
+              <button id="btnTrend" class="pill">Load</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chartDaily" height="130"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ADD ===== -->
+    <section id="view-add" class="view">
+      <div class="card">
+        <div class="card-header"><h3>Add Entry</h3></div>
+        <div class="form">
+          <div class="row">
+            <label>তারিখ <input id="date" type="date"/></label>
+            <label>সময় <select id="time"></select></label>
+          </div>
+          <label>Activity <textarea id="activity" rows="3" placeholder="আজ আপনি কী কাজ করছেন/করেছেন?"></textarea></label>
+          <div class="row">
+            <label>Output <input id="output" placeholder="Done / Not Done / পরিমাণ"/></label>
+            <label>Delivery <input id="delivery" placeholder="ডেলিভারি/কাকে দেয়া হয়েছে"/></label>
+          </div>
+          <label>Follow‑up <textarea id="followup" rows="2"></textarea></label>
+          <label>মন্তব্য <textarea id="comment" rows="2"></textarea></label>
+          <label>Note <textarea id="notes" rows="2"></textarea></label>
+          <input id="recordId" type="hidden"/>
+          <div class="row actions">
+            <button id="btnSave" class="pill primary">Save</button>
+            <button id="btnReset" class="pill">Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LIST ===== -->
+    <section id="view-list" class="view">
+      <div class="card">
+        <div class="card-header">
+          <h3>Entries</h3>
+          <div class="toolbar">
+            <select id="fltRange">
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="all">All</option>
+            </select>
+            <input id="fltDate" type="date"/>
+            <label class="switch"><input id="mineOnly" type="checkbox" checked><span>শুধু আমার</span></label>
+            <button id="btnRefresh" class="pill">Refresh</button>
+            <button id="btnCSV" class="pill">CSV</button>
+            <button id="btnXLSX" class="pill">Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="tblEntries">
+            <thead><tr>
+              <th>Time</th><th>Activity</th><th>Output</th><th>Follow‑up</th><th>Comment</th><th>Notes</th><th>Delivery</th><th>Actions</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PRINT ===== -->
+    <section id="view-print" class="view">
+      <div class="card">
+        <div class="card-header">
+          <h3>Print</h3>
+          <div class="toolbar">
+            <input id="printDate" type="date"/>
+            <label class="switch"><input id="printMine" type="checkbox" checked><span>শুধু আমার</span></label>
+            <button id="btnPrepPrint" class="pill">Preview</button>
+            <button id="btnDoPrint" class="pill primary">Print</button>
+          </div>
+        </div>
+        <div class="print-area">
+          <div class="print-header">
+            <div>
+              <div class="title">Daily Activity Register</div>
+              <div class="muted">Date: <span id="pDate"></span></div>
+            </div>
+            <div class="brand">ActivityOne</div>
+          </div>
+          <table class="print-table">
+            <thead><tr><th style="width:140px">Time</th><th>Task's Description</th><th style="width:140px">Output</th></tr></thead>
+            <tbody id="pRows"></tbody>
+          </table>
+          <div class="split">
+            <div><div class="section-title">NOTE</div><div id="pNotes" class="section-box"></div></div>
+            <div><div class="section-title">DELIVERY</div><div id="pDelivery" class="section-box"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PROFILE ===== -->
+    <section id="view-profile" class="view">
+      <div class="card">
+        <div class="card-header"><h3>Profile</h3></div>
+        <div class="profile">
+          <img id="pfPic" class="pf-pic" alt=""/>
           <div>
-            <div class="section-title">DELIVERY</div>
-            <div id="printDelivery" class="section-box"></div>
+            <div id="pfName" class="pf-name">Guest</div>
+            <div id="pfEmail" class="muted"></div>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer glass">
-    <small>© আপনার প্রতিষ্ঠান</small>
-  </footer>
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="bn-item active" data-view="home" aria-label="Dashboard">🏠<span>Home</span></button>
+    <button class="bn-item" data-view="add" aria-label="Add">✍️<span>Add</span></button>
+    <button class="bn-item" data-view="list" aria-label="Entries">📋<span>Entries</span></button>
+    <button class="bn-item" data-view="print" aria-label="Print">🖨️<span>Print</span></button>
+  </nav>
+
+  <!-- Save celebration -->
+  <div id="saveOverlay" class="save-overlay" aria-hidden="true">
+    <div class="save-card">
+      <svg class="check" viewBox="0 0 72 72" width="96" height="96" aria-hidden="true">
+        <circle class="ring" cx="36" cy="36" r="34" fill="none" />
+        <polyline class="tick" points="18,38 30,50 54,24" fill="none" />
+      </svg>
+      <div class="save-text">Saved!</div>
+    </div>
+    <div id="confetti"></div>
+  </div>
+
+  <!-- === Command Palette === -->
+  <div id="cmd" class="cmd hidden" role="dialog" aria-modal="true" aria-labelledby="cmdLabel">
+    <div class="cmd-box">
+      <div id="cmdLabel" class="cmd-title">কমান্ড প্যালেট</div>
+      <input id="cmdInput" class="cmd-input" placeholder="Type: add / home / list / print / profile, বা লিখে কুইক এন্ট্রি… (⌘/Ctrl+K)"/>
+      <ul id="cmdList" class="cmd-list"></ul>
+    </div>
+  </div>
 
   <script>
-    /* First load → set defaults into LocalStorage (your values) */
-    (function(){
-      if(!localStorage.getItem('API_URL')) localStorage.setItem('API_URL','https://script.google.com/macros/s/AKfycbzwq-nAWc8XQ0oUnmGWgAzhcPDjdk3N8w27Kc1ZZPUHVB2FlTn7JtgKdcH_fZXfIYvSxA/exec');
-      if(!localStorage.getItem('API_TOKEN')) localStorage.setItem('API_TOKEN','Z4rP8kT1sM9yE3bQ6vD2fW7nV0hU5xJ');
-      if(!localStorage.getItem('GOOGLE_CLIENT_ID')) localStorage.setItem('GOOGLE_CLIENT_ID','246306767204-qufpgjt23rae763lue1p91a9m7v3e29l.apps.googleusercontent.com');
-    })();
+    window.__CFG__ = { API_URL: 'https://script.google.com/macros/s/AKfycbznNTIc5P5IKJWTikaMGgKHq17jkjfBbKB46Bpbo2vIivoeW2M5dUKPId_yV6FWNzc4yA/exec', API_TOKEN: 'Z4rP8kT1sM9yE3bQ6vD2fW7nV0hU5xJ', GOOGLE_CLIENT_ID: '246306767204-qufpgjt23rae763lue1p91a9m7v3e29l.apps.googleusercontent.com' };
   </script>
   <script src="app.js"></script>
 </body>
